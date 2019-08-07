@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Region filterer for species inside a box described by MIN_LAT, MAX_LAT, MIN_LON, MAX_LON
+Region filterer for species inside mainland
 It also eliminates repeated locations
 """
 
