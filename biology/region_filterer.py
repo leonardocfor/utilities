@@ -12,10 +12,6 @@ from mpl_toolkits.basemap import Basemap
 
 
 ### Global variables
-MIN_LAT = -60
-MAX_LAT = 90
-MIN_LON = -150
-MAX_LON = -30
 ##############################
 
 def filter(lat,lon):
@@ -29,7 +25,7 @@ def filter(lat,lon):
     lon = float(lon)
     land_point = bm.is_land(lon,lat)
     include_it = False
-    if lat > MIN_LAT and lat < MAX_LAT and lon > MIN_LON and lon < MAX_LON and land_point: include_it = True
+    if land_point: include_it = True
     return include_it
 
 def fix_values(value_to_fix):
