@@ -11,5 +11,6 @@ Usage
 ```
 ./region_filterer.py -f folder
 ```
-
 Where folder contains a set of CSV files to be filtered
+
+Note: Modify MIN_LAT,MAX_LAT,MIN_LON,MAX_LON to set your box. Current coordinates refer to Americas continent
