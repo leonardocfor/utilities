@@ -32,13 +32,22 @@ def filter(lat,lon):
     """
     Filtering species per selected latitude and longitude
     """
+    filters = []
     if lat.count('.') > 1: lat = fix_values(lat)
     if lon.count('.') > 1: lon = fix_values(lon)
     lat = float(lat)
     lon = float(lon)
-    land_point = bm.is_land(lon,lat)
-    include_it = False
-    if lat > MIN_LAT and lat < MAX_LAT and lon > MIN_LON and lon < MAX_LON and land_point: include_it = True
+    if filter_ocean: filters.append(bm.is_land(lon,lat))
+    if filter_boxes:
+        for box in boxes:
+            MIN_LAT = box['MIN_LAT']
+            MAX_LAT = box['MAX_LAT']
+            MIN_LON = box['MIN_LON']
+            MAX_LON = box['MAX_LON']
+            if lat > MIN_LAT and lat < MAX_LAT and lon > MIN_LON and lon < MAX_LON and land_point:
+                filters.append(True)
+                break
+    include_it = True if all(filters) == True else False
     return include_it
 
 def fix_values(value_to_fix):
