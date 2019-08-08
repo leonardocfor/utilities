@@ -2,7 +2,9 @@
 
 Software utilities for data manipulation
 
+----
 ### 1. location_filterer.py
+----
 
 Filter location-based data (latitude,longitude) using geographic boxes. The software processes CSV files located in a folder and produced a filtered file per input. Filtering is done based on two approaches: 
 
