@@ -23,7 +23,7 @@ A template of <input_file.xml> can be found in [here](https://github.com/leonard
 <?xml version='1.0'?>
 
 <filter>
-  <folder>data/rvfsdarreglados/</folder>
+  <folder>folder_with_CSV_files</folder>
   <filter_boxes>true</filter_boxes>
   <filter_ocean>true</filter_ocean>
   <!-- Include as many box tags as required -->
@@ -36,4 +36,4 @@ A template of <input_file.xml> can be found in [here](https://github.com/leonard
 </filter>
 ```
 
-Each CSV file is to be composed of lines where fields are separed with semicolons. Modify NAME_FIELD_POSITION, LAT_FIELD_POSITION and LON_FIELD_POSITION in the script accordingly. Currently a line in a CSV file is assumed to be of the form: <name_of_the_point>;<latitude>;<longitude>
+Each CSV file, in <folder_with_CSV_files>, is to be composed of lines (one per point) where fields are separed with semicolons. Modify NAME_FIELD_POSITION, LAT_FIELD_POSITION and LON_FIELD_POSITION in the script accordingly. Currently a line in a CSV file is assumed to be of the form: <name_of_the_point>;<latitude>;<longitude>
