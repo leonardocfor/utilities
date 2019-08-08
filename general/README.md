@@ -1,4 +1,4 @@
-# utilities
+# Utilities
 
 Software utilities for data manipulation
 
