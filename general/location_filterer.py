@@ -2,35 +2,35 @@
 # -*- coding: utf-8 -*-
 
 """
-Region filterer for species inside a box described by MIN_LAT, MAX_LAT, MIN_LON, MAX_LON
-It also eliminates repeated locations
+Location filterer
+Developed by Leonardo Camargo-Forero
+https://github.com/leonardocfor
 """
 
 import optparse
 import os
 import sys
+import traceback
 from mpl_toolkits.basemap import Basemap
 from xml.etree import ElementTree as XML
 
 
 ### Global variables
-# MIN_LAT = -60
-# MAX_LAT = 90
-# MIN_LON = -150
-# MAX_LON = -30
 BOX_FIELDS = [
     'MIN_LAT',
     'MAX_LAT',
     'MIN_LON',
     'MAX_LON'
 ]
-
+NAME_FIELD_POSITION = 0
+LAT_FIELD_POSITION  = 1
+LON_FIELD_POSITION  = 2
 ##############################
 
 def filter(lat,lon):
 
     """
-    Filtering species per selected latitude and longitude
+    Filtering points per selected latitude and longitude
     """
     filters = []
     if lat.count('.') > 1: lat = fix_values(lat)
@@ -39,14 +39,16 @@ def filter(lat,lon):
     lon = float(lon)
     if filter_ocean: filters.append(bm.is_land(lon,lat))
     if filter_boxes:
+        within_box = False
         for box in boxes:
             MIN_LAT = box['MIN_LAT']
             MAX_LAT = box['MAX_LAT']
             MIN_LON = box['MIN_LON']
             MAX_LON = box['MAX_LON']
-            if lat > MIN_LAT and lat < MAX_LAT and lon > MIN_LON and lon < MAX_LON and land_point:
-                filters.append(True)
+            if lat > MIN_LAT and lat < MAX_LAT and lon > MIN_LON and lon < MAX_LON:
+                within_box = True
                 break
+        filters.append(within_box)
     include_it = True if all(filters) == True else False
     return include_it
 
@@ -64,22 +66,6 @@ def fix_values(value_to_fix):
                 correct_value+=c
                 skip_dots = True
     return correct_value
-
-def remove_ocean_points():
-
-    """
-    Removing points in the sea
-    """
-    global species_dict
-    species_dict_copy = {}
-
-    for species in species_dict:
-        species_dict_copy[species] = []
-        for pair in species_dict[species]:
-            if bm.is_land(float(pair[0]),float(pair[1])):
-                species_dict_copy[species].append(pair)
-
-    species_dict = species_dict_copy
 
 def read_input_file(input_template):
 
@@ -106,7 +92,7 @@ def read_input_file(input_template):
                 box_info = {}
                 for box_field in BOX_FIELDS:
                     if box.find(box_field) is not None:
-                        box_info[box_field] = box.find(box_field).text
+                        box_info[box_field] = float(box.find(box_field).text)
                     else:
                         print('Missing '+box_field+' in box')
                         raise
@@ -117,22 +103,26 @@ def read_input_file(input_template):
 
     except Exception as e:
         print('Error reading XML input file')
+        traceback.print_exc()
         sys.exit(1)
 
 def main():
 
     global folder, filter_boxes, filter_ocean, boxes
-    global species_dict, bm
+    global points_dict, bm
     bm = Basemap(area_thresh=0)
     parser = optparse.OptionParser()
     parser.add_option('-i','--input_file',dest='input_template',help='XML template with filterer input')
     #parser.add_option('-m','--mac',dest='new_mac',help='New MAC address')
     (options,arguments) = parser.parse_args()
     input_template = options.input_template
+    if not input_template: print('Missing input XML file '); sys.exit(1)
     read_input_file(input_template)
     if folder[0] != '/':
         folder = os.getcwd() + '/'+folder
     print('########################################################')
+    print('Location filterer :D')
+    print('Input XML file: '+input_template)
     print('Selected folder: '+folder)
     print('########################################################')
     files = []
@@ -141,40 +131,39 @@ def main():
         for file in f:
             files.append(os.path.join(r, file))
     print('Total number of files: '+str(len(files)))
-    species_dict = {}
+    points_dict = {}
 
     headers = {}
 
     for file in files:
         count = 0
         print('--------------------------------------------------------')
-        print('Processing species file: '+file.split('/')[-1])
+        print('Processing data file: '+file.split('/')[-1])
         print('--------------------------------------------------------')
         filtered_because_box = 0
         repeated_elements = 0
         for line in open(file):
             if count > 0:
                 data = line.strip().split(';')
-                species = data[0]
-                latitude = data[1]
-                longitude =  data[2]
+                point_name = data[NAME_FIELD_POSITION]
+                latitude = data[LAT_FIELD_POSITION]
+                longitude =  data[LON_FIELD_POSITION]
                 include_it = filter(latitude,longitude)
                 if include_it:
-                    if species not in species_dict: species_dict[species] = []
+                    if point_name not in points_dict: points_dict[point_name] = []
                     pair = [latitude,longitude]
-                    if pair not in species_dict[species]: species_dict[species].append(pair)
+                    if pair not in points_dict[point_name]: points_dict[point_name].append(pair)
                     else:  repeated_elements +=1
                 else: filtered_because_box +=1
             else: header =   line.strip()
             count+=1
-        headers[species] = header
-        if species in  species_dict: print('[+] Quantity of kept points: '+str(len(species_dict[species])))
-        else: print('[-] All points related to species were removed')
-        print('[-] Quantity of filtered points because of box or in the sea: '+str(filtered_because_box))
+        headers[point_name] = header
+        print('[*] Total quantity of points '+str(count-1))
+        if point_name in  points_dict: print('[+] Quantity of kept points: '+str(len(points_dict[point_name])))
+        else: print('[-] All points related to '+point_name+' were removed')
+        print('[-] Quantity of filtered points because out of box or in the sea: '+str(filtered_because_box))
         print('[-] Quantity of repeated points: '+str(repeated_elements))
 
-    #remove_repeated_elements()
-    #remove_ocean_points()
     filtered_folder = folder[0:-1]+'_filtered'
     os.mkdir(filtered_folder)
     print('########################################################')
@@ -182,19 +171,12 @@ def main():
     print('########################################################')
 
 
-    for species in species_dict:
-        filtered_file = open(filtered_folder+'/'+species+'.csv','w')
-        filtered_file.write(headers[species]+'\n')
-        for pair in species_dict[species]:
-            filtered_file.write(species+';'+pair[0]+';'+pair[1]+'\n')
+    for point_name in points_dict:
+        filtered_file = open(filtered_folder+'/'+point_name+'.csv','w')
+        filtered_file.write(headers[point_name]+'\n')
+        for pair in points_dict[point_name]:
+            filtered_file.write(point_name+';'+pair[0]+';'+pair[1]+'\n')
         filtered_file.close()
-
-
-
-
-
-
-
 
 if __name__ == "__main__":
 
