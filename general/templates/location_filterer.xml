@@ -1,0 +1,14 @@
+<?xml version='1.0'?>
+
+<filter>
+  <folder><!-- Folder containing CSV files to process --></folder>
+  <filter_boxes><!-- <true,false> --></filter_boxes>
+  <filter_ocean><!-- <true,false> --></filter_ocean>
+  <!-- Include as many box tags as required -->
+  <box>
+    <MIN_LAT></MIN_LAT>
+    <MAX_LAT></MAX_LAT>
+    <MIN_LON></MIN_LON>
+    <MAX_LON></MAX_LON>
+  </box>
+</filter>
